@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saved Workouts</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Saved Workouts</h1>
+        <div id="saved-workouts-container">
+            <ul id="saved-workouts"></ul>
+        </div>
+        <button type="button" id="back-button">Back to Search</button>
+        <div id="feedback"></div>
+    </div>
+    <script>
+        document.getElementById('back-button').addEventListener('click', () => {
+            window.location.href = 'newpage.html';
+        });
+
+        function loadSavedWorkouts() {
+            const savedWorkouts = JSON.parse(localStorage.getItem('savedWorkouts')) || [];
+            const savedWorkoutsList = document.getElementById('saved-workouts');
+
+            savedWorkoutsList.innerHTML = '';
+            savedWorkouts.forEach((workout, workoutIndex) => {
+                const li = document.createElement('li');
+                li.innerHTML = `<strong>${workout.name}</strong><ul>${workout.exercises.map((ex, exIndex) => `<li>${ex.name} ${ex.sets.map((set, setIndex) => `<ul><li>Set ${setIndex + 1} - ${set}</li></ul>`).join('')} <button class="remove-exercise" data-workout-index="${workoutIndex}" data-ex-index="${exIndex}">Remove</button></li>`).join('')}</ul>`;
+                const removeWorkoutButton = document.createElement('button');
+                removeWorkoutButton.textContent = 'Remove Workout';
+                removeWorkoutButton.addEventListener('click', () => {
+                    removeWorkout(workoutIndex);
+                });
+                li.appendChild(removeWorkoutButton);
+                savedWorkoutsList.appendChild(li);
+            });
+
+            document.querySelectorAll('.remove-exercise').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const workoutIndex = event.target.getAttribute('data-workout-index');
+                    const exIndex = event.target.getAttribute('data-ex-index');
+                    removeExercise(workoutIndex, exIndex);
+                });
+            });
+        }
+
+        function removeWorkout(index) {
+            const savedWorkouts = JSON.parse(localStorage.getItem('savedWorkouts')) || [];
+            savedWorkouts.splice(index, 1);
+            localStorage.setItem('savedWorkouts', JSON.stringify(savedWorkouts));
+            loadSavedWorkouts();
+            displayFeedback('Workout removed successfully.', 'success');
+        }
+
+        function removeExercise(workoutIndex, exIndex) {
+            const savedWorkouts = JSON.parse(localStorage.getItem('savedWorkouts')) || [];
+            savedWorkouts[workoutIndex].exercises.splice(exIndex, 1);
+            if (savedWorkouts[workoutIndex].exercises.length === 0) {
+                savedWorkouts.splice(workoutIndex, 1);
+            }
+            localStorage.setItem('savedWorkouts', JSON.stringify(savedWorkouts));
+            loadSavedWorkouts();
+            displayFeedback('Exercise removed successfully.', 'success');
+        }
+
+        function displayFeedback(message, type) {
+            const feedbackDiv = document.getElementById('feedback');
+            feedbackDiv.textContent = message;
+            feedbackDiv.className = type;
+        }
+
+        loadSavedWorkouts();
+    </script>
+</body>
+</html>
